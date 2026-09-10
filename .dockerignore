@@ -1,0 +1,25 @@
+# Build output — not needed; the Docker build runs its own Maven build
+target/
+
+# Secrets and local env files — never send to Docker daemon
+.env
+.env.*
+*.env
+application-secret*.yml
+application-secret*.yaml
+
+# IDE and OS noise
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
+.DS_Store
+Thumbs.db
+
+# Git history — not needed inside the image
+.git/
+
+# Logs
+*.log
+logs/
