@@ -9,6 +9,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -69,5 +70,20 @@ public class GlobalExceptionHandler {
                 "An unexpected error occurred. Please try again later."
         );
         return ResponseEntity.internalServerError().body(body);
+    }
+
+    /**
+     * Render's health checker (and browsers) hit GET / — return a clean 404
+     * instead of logging it as an ERROR. The real health endpoint is /actuator/health.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResource(NoResourceFoundException ex) {
+        log.debug("No resource found: {}", ex.getMessage());
+        ErrorResponse body = ErrorResponse.of(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                "No resource found at this path."
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 }
