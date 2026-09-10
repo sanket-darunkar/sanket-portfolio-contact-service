@@ -1,0 +1,22 @@
+# Local development overrides — never commit real secrets here.
+# Set the variables below in your shell or a .env file (which is git-ignored).
+#
+# Required for email to work locally:
+#   export MAIL_USERNAME=you@gmail.com
+#   export MAIL_PASSWORD=your-gmail-app-password
+#   export CONTACT_RECIPIENT_EMAIL=you@gmail.com
+spring:
+  application:
+    name: contact-service
+
+server:
+  port: 8081
+
+logging:
+  level:
+    dev.sanket.contactservice: DEBUG
+    org.springframework.mail: DEBUG
+
+app:
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:5173
