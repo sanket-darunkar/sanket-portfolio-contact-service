@@ -2,8 +2,8 @@
 # Set the variables below in your shell or a .env file (which is git-ignored).
 #
 # Required for email to work locally:
-#   export MAIL_USERNAME=you@gmail.com
-#   export MAIL_PASSWORD=your-gmail-app-password
+#   export RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
+#   export RESEND_FROM_EMAIL=onboarding@resend.dev      # or your verified sender domain
 #   export CONTACT_RECIPIENT_EMAIL=you@gmail.com
 spring:
   application:
@@ -15,7 +15,7 @@ server:
 logging:
   level:
     dev.sanket.contactservice: DEBUG
-    org.springframework.mail: DEBUG
+    org.springframework.web: DEBUG
 
 app:
   cors:

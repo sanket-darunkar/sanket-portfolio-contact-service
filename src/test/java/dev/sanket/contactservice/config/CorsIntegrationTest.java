@@ -30,14 +30,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestPropertySource(properties = {
-        // Stub SMTP so the context starts without a live mail server.
-        "spring.mail.host=localhost",
-        "spring.mail.port=3025",
-        "spring.mail.username=test@example.com",
-        "spring.mail.password=test",
-        "spring.mail.properties.mail.smtp.auth=false",
-        "spring.mail.properties.mail.smtp.starttls.enable=false",
-        "spring.mail.properties.mail.smtp.starttls.required=false",
+        // Stub Resend credentials so the context starts without real env vars.
+        "app.resend.api-key=re_test_placeholder",
+        "app.resend.from-email=onboarding@resend.dev",
         "app.contact.recipient-email=test@example.com",
         // Explicitly configure the two origins we care about for these tests.
         "app.cors.allowed-origins=https://developer-platform-inky.vercel.app,http://localhost:3000"

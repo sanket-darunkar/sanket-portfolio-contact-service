@@ -8,19 +8,15 @@ import org.springframework.test.context.TestPropertySource;
 /**
  * Smoke test — verifies the Spring application context loads cleanly.
  *
- * SMTP credentials are stubbed so the context starts without a live Gmail
- * connection. No real email is sent during this test.
+ * Resend credentials are stubbed with placeholder values so the context
+ * starts without requiring real environment variables.  No real email
+ * is sent during this test.
  */
 @SpringBootTest
 @ActiveProfiles("local")
 @TestPropertySource(properties = {
-        "spring.mail.host=localhost",
-        "spring.mail.port=3025",
-        "spring.mail.username=test@example.com",
-        "spring.mail.password=test",
-        "spring.mail.properties.mail.smtp.auth=false",
-        "spring.mail.properties.mail.smtp.starttls.enable=false",
-        "spring.mail.properties.mail.smtp.starttls.required=false",
+        "app.resend.api-key=re_test_placeholder",
+        "app.resend.from-email=onboarding@resend.dev",
         "app.contact.recipient-email=test@example.com"
 })
 class ContactServiceApplicationTests {

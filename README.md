@@ -3,8 +3,9 @@
 Spring Boot microservice that powers the contact form on [sanket.dev](https://sanket.dev).
 
 Receives `POST /api/contact` submissions, validates the payload, and sends a
-notification email to the site owner via Gmail SMTP. The visitor's email is set
-as the `Reply-To` header so replies go directly to them.
+notification email to the site owner via the [Resend](https://resend.com) HTTP
+Email API. The visitor's email is set as `reply_to` so replies go directly to
+them. No SMTP connection is required — email is delivered over HTTPS.
 
 ---
 
@@ -13,7 +14,7 @@ as the `Reply-To` header so replies go directly to them.
 | Layer | Technology |
 |---|---|
 | Runtime | Java 21, Spring Boot 3.3.4 |
-| Email | Spring Mail + Gmail SMTP (TLS) |
+| Email | Resend HTTP Email API (`java.net.http.HttpClient`) |
 | Validation | Jakarta Bean Validation |
 | Tests | JUnit 5, Mockito, AssertJ, MockMvc |
 
@@ -21,18 +22,18 @@ as the `Reply-To` header so replies go directly to them.
 
 ## Local setup
 
-### 1. Create a Gmail App Password
+### 1. Create a Resend account and API key
 
-Google requires an **App Password** (not your regular Gmail password) when
-2-Step Verification is enabled, which it must be for SMTP to work.
+1. Sign up at [resend.com](https://resend.com)
+2. Go to **API Keys** → **Create API Key**
+3. Copy the key (starts with `re_`) — you will not see it again
+4. For the sender address:
+   - During development / testing you can use `onboarding@resend.dev`
+     (Resend's shared testing address — no domain verification needed)
+   - For production set `RESEND_FROM_EMAIL` to an address on a domain you
+     have verified in the Resend dashboard
 
-1. Go to your Google Account → **Security**
-2. Under *How you sign in to Google*, open **2-Step Verification** (enable it if not already active)
-3. At the bottom of the 2-Step Verification page, click **App passwords**
-4. Choose app: *Mail*, device: *Other* → name it `Portfolio Contact Service`
-5. Copy the 16-character password shown — you will not see it again
-
-> Never paste this password into any source file or commit it to Git.
+> Never paste your API key into any source file or commit it to Git.
 
 ---
 
@@ -42,16 +43,16 @@ Export these in your shell before running the application (or add them to a
 `.env` file — it is git-ignored):
 
 ```bash
-export MAIL_USERNAME=you@gmail.com          # your Gmail address
-export MAIL_PASSWORD=xxxx-xxxx-xxxx-xxxx    # the 16-char App Password from step 1
-export CONTACT_RECIPIENT_EMAIL=you@gmail.com # inbox that receives contact emails
+export RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx        # Resend API key
+export RESEND_FROM_EMAIL=onboarding@resend.dev       # verified sender address
+export CONTACT_RECIPIENT_EMAIL=you@gmail.com         # inbox that receives contact emails
 ```
 
 You can also scope them to a single run:
 
 ```bash
-MAIL_USERNAME=you@gmail.com \
-MAIL_PASSWORD=xxxx-xxxx-xxxx-xxxx \
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx \
+RESEND_FROM_EMAIL=onboarding@resend.dev \
 CONTACT_RECIPIENT_EMAIL=you@gmail.com \
 mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
@@ -90,7 +91,7 @@ Expected response (`200 OK`):
 }
 ```
 
-Check your Gmail inbox — you should receive the notification within seconds.
+Check your inbox — you should receive the Resend notification within seconds.
 
 ---
 
@@ -98,11 +99,27 @@ Check your Gmail inbox — you should receive the notification within seconds.
 
 | Variable | Required | Description |
 |---|---|---|
-| `MAIL_USERNAME` | Yes | Gmail address used to authenticate with SMTP |
-| `MAIL_PASSWORD` | Yes | Gmail App Password (16 characters, no spaces) |
+| `RESEND_API_KEY` | Yes | Resend API secret key (starts with `re_`) |
+| `RESEND_FROM_EMAIL` | Yes | Verified sender address (e.g. `onboarding@resend.dev` for testing) |
 | `CONTACT_RECIPIENT_EMAIL` | Yes | Inbox that receives contact form notifications |
-| `CORS_ALLOWED_ORIGINS` | No | Comma-separated allowed origins (default: `http://localhost:3000`) |
-| `SERVER_PORT` | No | HTTP port (default: `8080`; local profile overrides to `8081`) |
+| `CORS_ALLOWED_ORIGINS` | No | Comma-separated allowed origins (default includes Vercel + localhost) |
+| `PORT` / `SERVER_PORT` | No | HTTP port (default: `8080`; local profile overrides to `8081`) |
+
+---
+
+## Render deployment
+
+Ensure the following environment variables are set in your Render service dashboard:
+
+| Variable | Value |
+|---|---|
+| `RESEND_API_KEY` | Your Resend API key |
+| `RESEND_FROM_EMAIL` | Your verified sender (e.g. `onboarding@resend.dev`) |
+| `CONTACT_RECIPIENT_EMAIL` | Your notification inbox |
+| `CORS_ALLOWED_ORIGINS` | `https://developer-platform-inky.vercel.app` |
+
+> `MAIL_USERNAME`, `MAIL_PASSWORD`, and `MAIL_HOST` are no longer used and
+> can be removed from Render if they were previously set.
 
 ---
 
@@ -112,7 +129,8 @@ Check your Gmail inbox — you should receive the notification within seconds.
 mvn clean verify
 ```
 
-All tests mock the email sender — no real emails are sent during the test suite.
+All tests mock the HTTP client — no real emails are sent and no network
+connections are made during the test suite.
 
 ---
 
@@ -135,6 +153,6 @@ All tests mock the email sender — no real emails are sent during the test suit
 
 | Status | Meaning |
 |---|---|
-| `200 OK` | Email sent successfully |
+| `200 OK` | Email sent successfully via Resend |
 | `400 Bad Request` | Validation failure — `fieldErrors` map included in response |
-| `500 Internal Server Error` | SMTP delivery failed — safe message returned, no credentials exposed |
+| `500 Internal Server Error` | Resend API delivery failed — safe message returned, no credentials exposed |
